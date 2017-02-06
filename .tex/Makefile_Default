@@ -1,0 +1,12 @@
+
+
+current=2
+psets=1 2
+
+.PHONY: default
+default: $(current)
+
+$(psets):
+	pdflatex $@.tex
+	rm -f $@.{dvi,log,aux}
+	open $@.pdf
