@@ -23,8 +23,9 @@ set statusline+=%*
 let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_loc_list_height = 5
 let g:syntastic_auto_loc_list = 0
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 1
+"turn of syntax checking
+let g:syntastic_check_on_open = 0
+let g:syntastic_check_on_wq = 0
 let g:syntastic_javascript_checkers = ['eslint']
 
 
@@ -40,9 +41,19 @@ set autoread
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 au VimEnter * call OnEnter()
-au BufRead *.txt call OnTxtEnter()
-au BufRead *.tex call OnTexEnter()
-au BufRead .vimrc call OnVimEnter()
+au BufEnter *.txt call OnTxtEnter()
+au BufEnter *.tex call OnTexEnter()
+au BufEnter .vimrc call OnVimEnter()
+au BufEnter *.vim call OnVimEnter()
+au BufEnter *.py call OnPythonEnter()
+au BufEnter *.c call OnCEnter()
+au BufEnter *.h call OnCEnter()
+au BufEnter *.cpp call OnCppEnter()
+au BufEnter *.cc call OnCCEnter()
+au BufEnter *.hpp call OnCppEnter()
+au BufEnter *.hs call OnHaskellEnter()
+au BufEnter *.sh call OnShEnter()
+au BufEnter Makefile call OnMakefileEnter()
 
 function OnEnter()
 	if "light" ==# $COLOR
@@ -52,43 +63,73 @@ function OnEnter()
 	endif
 endfunc
 
+function OnMakefileEnter()
+	call SetComment('#')
+endfunc
+
+function OnCEnter()
+	call SetComment('\/\/')
+endfunc
+
+function OnCppEnter()
+	call SetComment('\/\/')
+endfunc
+
+function OnCCEnter()
+	call SetComment('\/\/')
+endfunc
+
+function OnHaskellEnter()
+	call SetComment('--')
+	set ts=4
+	set expandtab
+endfunc
+
+function OnPythonEnter()
+	call SetComment('#')
+endfunc
+
 function OnVimEnter()
 	call SetComment('"')
 endfunc
 
 function OnTxtEnter()
 	call SetComment("")
-	set tw=80
+endfunc
+
+function OnShEnter()
+	call SetComment('#')
 endfunc
 
 function OnTexEnter()
 	call SetComment('%')
-	set tw=120
 	nnoremap <leader>p :w<cr>:call PdfLatex()<cr><cr>
 endfunc
+
 
 function PdfLatex()
 	let filename = expand('%:r')
 	execute ":!pdflatex " . filename . ".tex && open " . filename . ".pdf\<cr>"
 endfunc
 
-" generic code function
-function OnCodeEnter()
-endfunc
 
-" language specific behavior 
-function OnCEnter()
-endfunc
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Load cscope
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-function OnJSEnter()
-endfunc
-
-function OnCPPEnter()
-endfunc
-
-function OnJavaEnter()
-endfunc
-
+function! LoadCscope()
+  let db = findfile("cscope.out", ".;")
+  if (!empty(db))
+    let path = strpart(db, 0, match(db, "/cscope.out$"))
+    set nocscopeverbose " suppress 'duplicate connection' error
+    exe "cs add " . db . " " . path
+    set cscopeverbose
+  " else add the database pointed to by environment variable 
+  elseif $CSCOPE_DB != "" 
+    cs add $CSCOPE_DB
+  endif
+endfunction
+au BufRead /* call LoadCscope()
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -225,7 +266,8 @@ set lazyredraw
 set magic
 
 " line width
-set tw=120
+set tw=90
+
 
 " matching
 set shiftround
@@ -281,8 +323,10 @@ syntax enable
 "colorscheme desert
 "set background=light
 
-colorscheme vividchalk
-set background=dark
+"colorscheme vividchalk
+"set background=dark
+
+colorscheme industry
 
 nnoremap <leader>col :call ToggleColor()<cr>
 
@@ -297,13 +341,13 @@ function ToggleColor()
 endfunc
 
 function SetDark()
-	colorscheme vividchalk
+"	colorscheme vividchalk
 	set background=dark
 	let w:is_light = 0
 endfunc
 
 function SetLight()
-	colorscheme desert
+"	colorscheme desert
 	set background=light
 	let w:is_light = 1
 endfunc
@@ -347,6 +391,7 @@ set smarttab
 " 1 tab == 2 spaces
 set shiftwidth=2
 set tabstop=2
+"set expandtab
 
 set lbr
 set wrap
@@ -585,7 +630,7 @@ endfunc
 "used to comment out or delete unwanted mappings before recovery, or create a
 "set of new mappings manually, before using RecoverMappings()
 function EditMappings()
-	execute "! vim " . g:temp_mappings
+	execute "e " . g:temp_mappings
 endfunc
 
 let g:dumped_mappings = "~/.vim/.dumped_mappings"

@@ -40,6 +40,7 @@ case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
 
+
 # uncomment for a colored prompt, if the terminal has the capability; turned
 # off by default to not distract the user: the focus in a terminal window
 # should be on the output of commands, not on the prompt
@@ -47,7 +48,7 @@ esac
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	# We have color support; assume it's compliant with Ecma-48
+	# We have color support; assume its compliant with Ecma-48
 	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
 	# a case would tend to support setf rather than setaf.)
 	color_prompt=yes
@@ -56,10 +57,14 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
+#color_prompt=no;
+
+
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+	PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]EVAN\[\033[00m\]:\[\033[38;5;80m\]\w\[\033[00m\]\$ '
 else
-    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    #PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    PS1='${debian_chroot:+($debian_chroot)}evan:\w\$ '
 fi
 unset color_prompt force_color_prompt
 
@@ -117,6 +122,8 @@ if ! shopt -oq posix; then
 fi
 
 # BEGIN Columbia CS stuent settings
+
+set -o vi
 
 umask 077
 export EDITOR=vim
