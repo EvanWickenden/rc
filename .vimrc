@@ -30,7 +30,8 @@ let g:syntastic_javascript_checkers = ['eslint']
 
 
 " external shell will respect .bashrc functions etc.
-set shellcmdflag=-ic
+"set shellcmdflag=-ic
+set shellcmdflag=-c
 
 " Set to auto read when a file is changed from the outside
 set autoread
@@ -40,9 +41,16 @@ set autoread
 " => FILE SPECIFIC BEHAVIOR
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+let b:filename = ""
+let b:shell_tmp_buf = ""
+let g:tmp_tex_filename = ""
+let g:tmp_outbuf_name = ""
+set splitright
+
 au VimEnter * call OnEnter()
+au VimEnter *.tex call OnTexVimEnter()
+au BufEnter *.tex call OnTexBufEnter()
 au BufEnter *.txt call OnTxtEnter()
-au BufEnter *.tex call OnTexEnter()
 au BufEnter .vimrc call OnVimEnter()
 au BufEnter *.vim call OnVimEnter()
 au BufEnter *.py call OnPythonEnter()
@@ -56,6 +64,9 @@ au BufEnter *.sh call OnShEnter()
 au BufEnter Makefile call OnMakefileEnter()
 
 function OnEnter()
+	echom "OnEnter"
+	let b:filename = expand('%:r')
+	let b:shell_tmp_buf = ".shell_tmp_buf_" . b:filename
 	if "light" ==# $COLOR
 		call SetLight()
 	else
@@ -101,15 +112,52 @@ function OnShEnter()
 	call SetComment('#')
 endfunc
 
-function OnTexEnter()
+
+
+function OnTexBufEnter()
+	echom "OnTexBufEnter"
 	call SetComment('%')
-	nnoremap <leader>p :w<cr>:call PdfLatex()<cr><cr>
+	set tw=100
+endfunc
+
+function PdfLatex()
+	echom "PdfLatex"
+	execute ":! ~/.vim/scripts/pdflatex.sh " . g:tmp_tex_filename . " " . g:tmp_outbuf_name
 endfunc
 
 
-function PdfLatex()
-	let filename = expand('%:r')
-	execute ":!pdflatex " . filename . ".tex && open " . filename . ".pdf\<cr>"
+function OnTexVimEnter()
+	echom "OnTexVimEnter"
+"	echom "b:filename " . b:filename
+	let g:tmp_tex_filename = b:filename
+	let g:tmp_outbuf_name = b:shell_tmp_buf
+"	call AuTester("*")
+
+"	autocmd FileChangedShell * echom "FUCKCHANGEDSHELL"
+"	autocmd BufReadPost * echom "FUCK"
+"	autocmd Buf
+
+	execute ":vsp|view " . g:tmp_outbuf_name
+"	execute "autocmd BufReadPost " . g:tmp_outbuf_name . " normal \<c-w>lggG\<c-w>h"
+
+	vertical resize -20
+
+	execute "normal \<c-w>h"
+	nnoremap <leader>p :w<cr>:call PdfLatex()<cr><cr>
+endfunc
+
+function AuTester(group)
+"	au InsertEnter <buffer> echom "InsertEnter test"
+	execute 'autocmd FileChangedShell ' . a:group . ' echom "FileChangedShell test"'
+	execute 'autocmd QuitPre ' . a:group . ' execute ":!echo QuitPre test"'
+	execute 'autocmd VimLeavePre ' . a:group . ' execute ":!echo VimLeavePre test"'
+	execute 'autocmd VimLeave ' . a:group . ' execute ":!echo VimLeave test"'
+	execute 'autocmd BufLeave ' . a:group . ' execute ":!echo BufLeave test"'
+	execute 'autocmd BufUnload ' . a:group . ' execute ":!echo BufUnload test"'
+endfunc
+
+function OutBufChanged()
+	echom "OutBufChanged!"
 endfunc
 
 
@@ -153,7 +201,7 @@ let g:mapleader = ","
 " => Abbreviations
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-iab nn \\<cr>&=
+iab nn \nonumber\\<cr>&=
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -215,11 +263,11 @@ function MTexTemplate()
 endfunc
 
 function Edit_T()
-	execute "e ~/.tex/.tex_template.txt"
+	execute "vsp ~/.tex/.tex_template"
 endfunc
 
 function Edit_M()
-	execute "e ~/.tex/.tex_template_math"
+	execute "vsp ~/.tex/.tex_template_math"
 endfunc
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -285,6 +333,8 @@ set number
 set relativenumber
 
 nnoremap <leader>num :call ToggleNumber()<cr>
+nnoremap <leader>tex :call MTexTemplate()<cr>
+nnoremap <leader>next /NEXT<cr>
 
 let b:is_relative = 1
 
@@ -310,8 +360,8 @@ endfunction
 
 
 " toggle when switching modes
-au InsertEnter * call SetNorelative()
-au InsertLeave * call SetRelative()
+"au InsertEnter * call SetNorelative()
+"au InsertLeave * call SetRelative()
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
